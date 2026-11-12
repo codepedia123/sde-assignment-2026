@@ -644,7 +644,27 @@ class Controller:
             }
             active = connected >= 120 and rate >= 0.03
             consecutive = self.store.set_signal(wid, "hallucination_rate", active, minute, evidence)
-            if not active or consecutive < 1 or self.store.open_incident(wid, "hallucination"):
+            incident = self.store.open_incident(wid, "hallucination")
+            if incident:
+                prior = self.store.action(incident["action_id"]) if incident["action_id"] else None
+                retryable = (
+                    active
+                    and prior is not None
+                    and prior["status"] in {"expired", "lapsed", "stale", "failed"}
+                    and minute - int(prior["updated_minute"]) >= 1440
+                    and not self.store.workflow_has_open_action(wid)
+                    and self._can_request_approval(loads(row["spec_json"]))
+                )
+                if retryable:
+                    self.store.audit(
+                        minute, self.state["ts"], "incident_reproposal",
+                        "The unsafe signal persisted after a terminal proposal; preparing fresh evidence.",
+                        {"previous_action_id": prior["action_id"], "previous_status": prior["status"], **evidence},
+                        wid,
+                    )
+                    self._respond_to_hallucination(wid, incident["incident_id"], evidence)
+                continue
+            if not active or consecutive < 1:
                 continue
             incident_id = f"inc-{hashlib.sha256(f'{wid}|hallucination|{version}'.encode()).hexdigest()[:20]}"
             if not self.store.create_incident({

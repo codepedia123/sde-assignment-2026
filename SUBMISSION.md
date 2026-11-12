@@ -114,6 +114,7 @@ SQLite
 - **Win**ner: `≥100` **tri**als **per** **op**tion, `≥1.5pp` **up**lift, **and** **a** **Bonfe**rroni-adjusted **two**-proportion **thres**hold. **Pro**motion **kee**ps `15%` **moni**toring **tra**ffic.
 - **Dec**ay: **The** **eng**ine **comp**ares **the** **ear**ly **exp**eriment **win**dow **with** **a** **rol**ling 24-**ho**ur **win**dow **und**er **the** **sa**me **pro**mpt. **Roll**back **also** **req**uires **a** **signi**ficantly **bet**ter **liv**e **alter**native.
 - **Call**er ID: **Fo**ur-**ho**ur **popu**lation **win**dows, `≥150` **di**als **per** DID, `≥4pp` **de**ficit, `z≥2.33`, **and** **two** **cons**ecutive **sig**nals. **Nor**mal **bala**ncing **kee**ps **a** `10%` **explor**ation **flo**or; **a** `≤65%` **rela**tive **hea**lth **sig**nal **may** **remo**ve **the** DID.
+- **Call** **ti**me: **His**tory **is** **inge**sted **bef**ore **the** **fir**st **deci**sion, **but** **I** **delib**erately **did** **not** **bui**ld **per**-cohort **or** **per**-person **sche**dule **opti**misation. **The** **exis**ting **busi**ness **sche**dule **rem**ains **autho**ritative; **a** **pro**duction **ver**sion **wou**ld **nee**d **a** **hiera**rchical **mod**el **and** **exp**licit **sche**dule **explor**ation **bud**get.
 - **Guard**rail: **Pic**kup-primary **work**flows **do** **not** **exp**lore **wel**come/**voi**ce. **Th**ose **dimen**sions **can**not **imp**rove **the** **pri**mary KPI **and** **can** **on**ly **ris**k **enga**gement.
 
 ## 6. Governance
@@ -128,9 +129,11 @@ prepared → sending → pending → approved → applying → applied
 any pre-apply state + changed base_version → stale → recompute, never force
 ```
 
-**Pro**posal IDs **are** **deter**ministic **and** **pers**isted **bef**ore **the** **HTTP** **ca**ll. **Aft**er **a** **cra**sh **betw**een **requ**est **and** **resp**onse, **the** **cont**roller **fin**ds **the** **ser**ver-side **appr**oval **by** `proposal_id`. **App**ly **reco**nciliation **us**es **conf**ig **his**tory **and** `approval_id`.
+**Pro**posal IDs **are** **deter**ministic **and** **pers**isted **bef**ore **the** **HTTP** **ca**ll. **Aft**er **a** **cra**sh **betw**een **requ**est **and** **resp**onse, **the** **cont**roller **fin**ds **the** **ser**ver-side **appr**oval **by** `proposal_id`. **App**ly **reco**nciliation **us**es **conf**ig **his**tory **and** `approval_id`. **Rej**ected, **exp**ired, **and** **lap**sed **requ**ests **are** **clo**sed **and** **nev**er **rep**layed. **If** **an** **exp**ired, **lap**sed, **sta**le, **or** **tran**sport-**fai**led **inci**dent **miti**gation **sti**ll **has** **an** **unsa**fe **popu**lation **sig**nal **aft**er **a** 24-**ho**ur **cool**down, **the** **cont**roller **obt**ains **fre**sh **evi**dence, **cre**ates **a** **new** **pro**posal ID **agai**nst **the** **cur**rent **ba**se **ver**sion, **and** **resu**bmits **dur**ing **appr**over **ho**urs. **A** **sta**le-base `409` **is** **reco**rded **as** **sta**le **and** **the** **appr**oved **di**ff **is** **not** **for**ced **ov**er **the** **new**er **configu**ration.
 
 **Appr**oval **requ**ests **are** **sen**t **betw**een 11:00 **and** **one** **ho**ur **bef**ore **the** **appr**over **win**dow **clo**ses. **Auto**-apply **is** **us**ed **on**ly **whe**n **eve**ry **cha**nged **dimen**sion **is** **all**owed **and** **the** **calcu**lated **tot**al-variation **shi**ft **is** **wit**hin `max_shift`.
+
+**Aff**ected **lea**ds **is** **the** **work**flow's **dai**ly **ba**tch **si**ze **multi**plied **by** **the** **re**try-**cad**ence **len**gth. **Dry** **ru**ns **con**tain **the** **obse**rved **histo**rical **or** **rando**mised **coh**ort **ra**tes, **sam**ple **si**zes, **confi**dence **bou**nds, **and** **exa**ct **pro**posed **di**ff; **th**ey **are** **not** **prese**nted **as** **a** **counter**factual **simu**lator. **Imp**act **sco**res **are** **bou**nded `0–1` **heuri**stics **der**ived **fr**om **prac**tical **up**lift **and** **inci**dent **seve**rity, **not** **inve**nted **rev**enue **esti**mates. **One** **op**en **act**ion **per** **work**flow **and** **the** **plat**form's **own** **fat**igue **lim**it **pre**vent **requ**est **floo**ding.
 
 ## 7. Incidents
 
@@ -149,15 +152,20 @@ any pre-apply state + changed base_version → stale → recompute, never force
 
 **Vali**dation **mea**sures **safe**ty **on**ly. **The** **post**-apply **enga**gement KPI **rem**ains **a** **sepa**rate **guard**rail; **the** **LLM** **nev**er **dec**ides **the** **win**ner.
 
+**The** **hallu**cination **tri**gger **us**es **a** **rol**ling **fo**ur-**ho**ur **win**dow, `≥120` **conn**ected **cal**ls, **and** `≥3%` QA **fla**gs **und**er **a** **non**-**base**line **pro**mpt. **At** **exa**ctly `120` **cal**ls, **a** **pu**re **indep**endent `1%` **backg**round-**fl**ag **pro**cess **cro**sses **fo**ur **fla**gs **abo**ut `3.3%` **of** **the** **ti**me; **th**is **is** **an** **expl**icit **assi**gnment **tra**de-**off** **for** **fas**ter **inci**dent **dete**ction, **not** **a** **pro**duction-**calib**rated **fal**se-**posi**tive **guar**antee. **Pro**duction **nee**ds **ten**ant-**spec**ific **calib**ration **agai**nst **hu**man-**lab**elled **cal**ls.
+
 ## 8. Scale
 
 | Metric | Result |
 |---|---:|
 | Events | 9,737,591 |
+| Effective end-to-end throughput | 40,392 events/s |
 | Wall-clock, history + five days | 241.08 s |
 | Average per simulated day | 48.22 s |
 | Peak RSS | 53.9 MiB |
 | SQLite state | 2.2 GiB |
+
+**The** **throu**ghput **fig**ure **div**ides **all** **pers**isted **simu**lator **eve**nts **by** **the** **comp**lete **cont**roller **wa**ll-**clo**ck, **so** **it** **incl**udes **his**tory, **deci**sions, **simu**lator **advan**cement, **and** HTTP **over**head **rat**her **th**an **clai**ming **a** **microb**enchmark. **Nor**mal **deci**sion **tic**ks **are** **at** **mo**st `60` **simu**lated **min**utes **apa**rt; **pen**ding **gover**nance **or** **an** **act**ive **inci**dent **red**uces **tha**t **to** `15` **min**utes. **Statis**tical **win**dows **and** **min**imum **sam**ples **add** **inten**tional **evi**dence **lat**ency **bey**ond **the** **sche**duler **ti**ck.
 
 **At** `10×`, **sto**rage/**ind**ex **wri**te **ampli**fication **bre**aks **bef**ore **mem**ory. **I** **wou**ld **par**tition **Post**gres **by** **da**te **and** **hash**ed `workflow_id`, **kee**p **the** **rec**ent **cus**tomer-level **aud**it **win**dow, **and** **com**pact **old** **cal**ls **in**to **hour**ly **aggr**egates. **Work**flow **deci**sions **can** **the**n **be** **shar**ded **by** `tenant_id/workflow_id` **with** **a** **sin**gle **ow**ner **per** **sh**ard.
 
@@ -214,13 +222,27 @@ python scripts/audit_query.py \
 
 ## 11. Results
 
-| Scenario | Conclusion Δ | Pickup Δ | Engagement Δ | Harmful changes |
-|---|---:|---:|---:|---:|
-| public_01 | +9.30% | +7.72% | +0.99% | 0 |
-| public_02 | +24.16% | +21.13% | +0.34% | 0 |
-| public_03 | +19.99% | +11.48% | +5.11% | 0 |
+### public_01
 
-**The** **ful**l **work**flow **tab**les **are** **in** `reports/public_01.md` **and** `reports/public_02.md`. `public_02/nw_renewal` **lost** `1.99%` **conclu**sion **ra**te **and** `5.42%` **enga**gement **des**pite **a** `3.99%` **pic**kup **ga**in. **The** **ma**in **cau**se **was** **the** **pub**lic **dec**aying **wel**come **vari**ant **plus** **the** D5 **sup**ervisor **voi**ce **ed**it. **The** **cont**roller **corr**ectly **did** **not** **over**write **the** **sup**ervisor. **A** **lon**ger **win**dow **or** **mor**e **resid**ual **tra**ffic **wou**ld **det**ect **the** **dec**ay **ear**lier.
+| workflow | conclusion rate | Δ | pickup rate | Δ | engagement rate | Δ |
+|---|---:|---:|---:|---:|---:|---:|
+| ks_cancel | 0.3568 | +4.47% | 0.2538 | +3.76% | 0.4949 | +0.59% |
+| nw_kyc | 0.4589 | +25.18% | 0.2998 | +23.86% | 0.5905 | -1.11% |
+| nw_renewal | 0.4406 | +5.81% | 0.2758 | +4.40% | 0.5501 | +1.57% |
+| ALL | 0.4064 | +9.30% | 0.2703 | +7.72% | 0.5348 | +0.99% |
+
+### public_02
+
+| workflow | conclusion rate | Δ | pickup rate | Δ | engagement rate | Δ |
+|---|---:|---:|---:|---:|---:|---:|
+| ks_cancel | 0.3724 | +58.11% | 0.2476 | +36.70% | 0.5124 | +9.56% |
+| nw_kyc | 0.4706 | +25.92% | 0.2972 | +26.76% | 0.5945 | -2.28% |
+| nw_renewal | 0.4244 | -1.99% | 0.2727 | +3.99% | 0.5245 | -5.42% |
+| ALL | 0.4105 | +24.16% | 0.2659 | +21.13% | 0.5344 | +0.34% |
+
+`public_01` **impr**oved **the** **ove**rall **conclu**sion **ra**te **by** `9.30%`; **the** **lar**gest **ga**in **ca**me **fr**om **call**er-ID **bala**ncing **on** `nw_kyc`. `public_02` **impr**oved **the** **ove**rall **conclu**sion **ra**te **by** `24.16%`, **fix**ed **the** **fla**gged DID **and** **unsa**fe **pro**mpt, **and** **prod**uced `0` **gra**der-**lab**elled **harm**ful **cont**roller **cha**nges.
+
+`public_02/nw_renewal` **lost** `1.99%` **conclu**sion **ra**te **and** `5.42%` **enga**gement **des**pite **a** `3.99%` **pic**kup **ga**in. **The** **ma**in **cau**se **was** **the** **pub**lic **dec**aying **wel**come **vari**ant **plus** **the** D5 **sup**ervisor **voi**ce **ed**it. **The** **cont**roller **corr**ectly **did** **not** **over**write **the** **sup**ervisor. **A** **lon**ger **win**dow **or** **mor**e **resid**ual **tra**ffic **wou**ld **det**ect **the** **dec**ay **ear**lier.
 
 ## 12. Trade-offs & rejected alternatives
 
@@ -240,6 +262,7 @@ python scripts/audit_query.py \
 - **The** **coh**ort **sea**rch **is** **lim**ited **to** **one**-feature **sli**ces **and** **two** **coh**orts **per** **work**flow.
 - **The** **experi**ment **mod**el **ana**lyses **wel**come **and** **voi**ce **ma**in **eff**ects; **it** **sto**res **pai**red **ar**ms **but** **does** **not** **pro**mote **a** **ful**l **inte**raction **mod**el.
 - **Imp**act **sc**ores **are** **hon**est **heu**ristics **fr**om **obse**rved **up**lift, **not** **calib**rated **cus**tomer **val**ue.
+- **The** `3%`/`120` **hallu**cination **thres**hold **priori**tises MTTR **and** **has** **not** **be**en **calib**rated **to** **a** **pro**duction **fal**se-**posi**tive SLO.
 - **A** **sup**ervisor **cha**nge **may** **tem**porarily **conf**ound **rol**ling **enga**gement; **pro**mpt-seg**mented **dec**ay **ana**lysis **red**uces **but** **do**es **not** **elim**inate **th**is.
 
 ## 14. If this went to production at Formi next month
