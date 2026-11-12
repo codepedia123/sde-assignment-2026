@@ -1,0 +1,23 @@
+{
+  "killed_at": {
+    "scenario": "public_01_dev",
+    "sim_minute": 675,
+    "ts": "2027-01-04T11:15:00+05:30"
+  },
+  "final_state": {
+    "scenario": "public_01_dev",
+    "sim_minute": 11520,
+    "ts": "2027-01-12T00:00:00+05:30",
+    "finished": true
+  },
+  "calls": 224337,
+  "distinct_call_event_ids": 224337,
+  "proposals": 11,
+  "distinct_proposal_ids": 11,
+  "checks": {
+    "scenario_finished": true,
+    "no_duplicate_call_events": true,
+    "no_duplicate_proposals": true
+  }
+}
+
